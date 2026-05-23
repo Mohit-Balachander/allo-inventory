@@ -32,17 +32,19 @@ When a customer proceeds to checkout, payment can take several minutes (3DS flow
 ---
 
 ## Architecture
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Next.js 16    │────▶│   Neon Postgres   │     │   Upstash   │
-│   App Router    │     │   (via Prisma 7)  │     │    Redis    │
-│                 │────▶│                  │     │             │
-│  /api/products  │     │  Product          │     │  Dist. Lock │
-│  /api/reserves  │────▶│  Warehouse        │────▶│  Idempotency│
-│  /api/confirm   │     │  Stock            │     │  Cache      │
-│  /api/release   │     │  Reservation      │     │             │
-│  /api/cron      │     └──────────────────┘     └─────────────┘
-└─────────────────┘
 
+**Frontend** → Next.js 16 App Router (Vercel)
+
+**API Layer** → Next.js Route Handlers (serverless functions)
+
+**Database** → Neon Postgres via Prisma 7
+- Tables: Product, Warehouse, Stock, Reservation
+
+**Cache + Locking** → Upstash Redis
+- Distributed lock per product+warehouse
+- Idempotency key cache (24hr TTL)
+
+**Cron** → Vercel Cron → `/api/cron/expire` (daily)
 ---
 
 ## Concurrency — The Core Problem
