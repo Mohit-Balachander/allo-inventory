@@ -24,8 +24,8 @@ export async function POST(req: Request) {
   const acquired = await redis.set(lockKey, lockVal, { nx: true, ex: 10 })
 
   if (!acquired) {
-    return NextResponse.json({ error: 'Please try again' }, { status: 429 })
-  }
+  return NextResponse.json({ error: 'Not enough stock available' }, { status: 409 })
+}
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
